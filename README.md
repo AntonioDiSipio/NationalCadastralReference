@@ -1,6 +1,6 @@
 # Estrazione dati catastali da NATIONALCADASTRALREFERENCE
 
-Questo repository contiene uno script Python per QGIS che estrae automaticamente i dati catastali (comune, sezione, foglio, allegato, sviluppo, particella) da un campo `NATIONALCADASTRALREFERENCE`, compilando i relativi campi attributo in un layer vettoriale.
+Questo repository contiene uno script Python per QGIS che estrae automaticamente i dati catastali (comune, sezione, foglio, allegato, sviluppo, particella) dal campo `NATIONALCADASTRALREFERENCE`, compilando i relativi campi attributo in un layer vettoriale.
 
 ## 📦 Contenuto
 
@@ -25,13 +25,13 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
 
 | NATIONALCADASTRALREFERENCE       |
 |----------------------------------|
-| C632_A1234..567                  |
+| C632A_1234.567                  |
 
 ## 📤 Output generato
 
 | comune | sezione | foglio | allegato | sviluppo | particella |
 |--------|---------|--------|----------|----------|------------|
-| Chieti | A       | 1234   | *(vuoto)*| *(vuoto)*| 567        |
+| Chieti |*(Vuoto) | 1234   |*(vuoto)* |*(vuoto)* | 567        |
 
 ## 📝 Log
 
