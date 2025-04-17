@@ -11,6 +11,8 @@ from codcomITA import mappa_codici_comuni
 CAMPO_INPUT = "NATIONALCADASTRALREFERENCE"
 CAMPI_OUTPUT = ["comune", "sezione", "foglio", "allegato", "sviluppo", "particella"]
 PATTERN_NCR = r"^([A-Z0-9]{4})([_A-Z])([0-9]{4})([A-Z0-9]?)([A-Z0-9]?)\.(.+)$"
+salva_log = True  # Aggiunto per abilitare o disabilitare il salvataggio del log
+log_filename = "log_dati_catastali.txt"  # Nome predefinito del file di log
 
 # === FUNZIONI UTILI ===
 def verifica_layer_attivo():
