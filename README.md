@@ -44,11 +44,19 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
    - `sviluppo`
    - `particella`
 
-## 🗂 Esempio input
+## 🗂 Esempi di input
 
-| NATIONALCADASTRALREFERENCE       |
-|----------------------------------|
-| C632_1234.567                   |
+```
+C632_1234.567
+D690_000900.4096
+D763_0015AZ.4159
+A345A0086C0.988
+A345A0080C0.72
+A345A0081A0.697
+A345A010200.2908
+D763_00210Z.905
+D763_00210Z.4331
+```
 
 ## 📤 Output generato
 
@@ -57,28 +65,12 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
 | Chieti               | *(vuoto)* | 1234   | *(vuoto)*| *(vuoto)*| 567        |
 | San Giovanni Teatino| *(vuoto)* | 0009   | *(vuoto)*| *(vuoto)*| 4096       |
 | Francavilla al Mare | *(vuoto)* | 0015   | A        | Z        | 4159       |
-
-## 📌 Esempi aggiuntivi
-
-### Esempio 1
-**Input:**
-```
-D690_000900.4096
-```
-**Output:**
-| comune               | sezione   | foglio | allegato | sviluppo | particella |
-|----------------------|-----------|--------|----------|----------|------------|
-| San Giovanni Teatino | *(vuoto)* | 0009   | *(vuoto)*| *(vuoto)*| 4096       |
-
-### Esempio 2
-**Input:**
-```
-D763_0015AZ.4159
-```
-**Output:**
-| comune               | sezione   | foglio | allegato | sviluppo | particella |
-|----------------------|-----------|--------|----------|----------|------------|
-| Francavilla al Mare  | *(vuoto)* | 0015   | A        | Z        | 4159       |
+| L'Aquila            | A         | 0086   | C        | 0        | 988        |
+| L'Aquila            | A         | 0080   | C        | 0        | 72         |
+| L'Aquila            | A         | 0081   | A        | 0        | 697        |
+| L'Aquila            | A         | 0102   | 0        | 0        | 2908       |
+| Francavilla al Mare | *(vuoto)* | 0210   | Z        | *(vuoto)*| 905        |
+| Francavilla al Mare | *(vuoto)* | 0210   | Z        | *(vuoto)*| 4331       |
 
 ## 📝 Log
 
