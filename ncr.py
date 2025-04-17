@@ -5,28 +5,24 @@ from qgis.core import QgsProject, QgsField, Qgis, QgsMessageLog
 import os
 import re
 from datetime import datetime
-
-# === CONFIGURAZIONE ===
-campo_input = "NATIONALCADASTRALREFERENCE"
-campi_output = ["comune", "sezione", "foglio", "allegato", "sviluppo", "particella"]
-
 from codcomITA import mappa_codici_comuni
 
+# === CONFIGURAZIONE ===
+CAMPO_INPUT = "NATIONALCADASTRALREFERENCE"
+CAMPI_OUTPUT = ["comune", "sezione", "foglio", "allegato", "sviluppo", "particella"]
+PATTERN_NCR = r"^([A-Z0-9]{4})([_A-Z])([0-9]{4})([A-Z0-9]?)([A-Z0-9]?)\.(.+)$"
 
-# === CHIEDI DOVE SALVARE IL FILE DI LOG ===
-default_name = f"campi_catastali_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-log_filename, _ = QFileDialog.getSaveFileName(
-    iface.mainWindow(),
-    "Salva file di log",
-    os.path.join(QgsProject.instance().homePath(), default_name),
-    "File di testo (*.txt)"
-)
-salva_log = bool(log_filename)
+# === FUNZIONI UTILI ===
+def verifica_layer_attivo():
+    """Verifica che il layer attivo sia presente e valido."""
+    layer = iface.activeLayer()
+    if not layer:
+        raise Exception("Nessun layer attivo trovato!")
+    return layer
 
-# === FUNZIONE DI PARSING ===
 def parse_ncr(ref):
-    pattern = r"^([A-Z0-9]{4})([_A-Z])([0-9]{4})([A-Z0-9]?)([A-Z0-9]?)\.(.+)$"
-    match = re.match(pattern, ref)
+    """Parsa il riferimento catastale e restituisce un dizionario."""
+    match = re.match(PATTERN_NCR, ref)
     if not match:
         return None
     codice = match.group(1)
@@ -46,25 +42,19 @@ def parse_ncr(ref):
     }
 
 # === INIZIALIZZAZIONE ===
-layer = iface.activeLayer()
-if not layer:
-    raise Exception("Nessun layer attivo trovato!")
-
+layer = verifica_layer_attivo()
 prov = layer.dataProvider()
 campi_esistenti = [f.name().lower() for f in layer.fields()]
 mappa_indici = {}
 
 # === CREA CAMPI MANCANTI ===
-nuovi = []
-for nome in campi_output:
-    if nome.lower() not in campi_esistenti:
-        nuovi.append(QgsField(nome, QVariant.String))
+nuovi = [QgsField(nome, QVariant.String) for nome in CAMPI_OUTPUT if nome.lower() not in campi_esistenti]
 if nuovi:
     prov.addAttributes(nuovi)
     layer.updateFields()
 
 # === INDICI CAMPI ===
-for nome in campi_output:
+for nome in CAMPI_OUTPUT:
     mappa_indici[nome] = layer.fields().lookupField(nome)
 
 # === FEATURES ===
@@ -78,49 +68,54 @@ progress.setMinimumDuration(0)
 valori_da_aggiornare = {}
 righe_log = []
 
-for i, feat in enumerate(features):
-    if progress.wasCanceled():
-        print("⚠️ Operazione annullata.")
-        break
+try:
+    for i, feat in enumerate(features):
+        if progress.wasCanceled():
+            print("⚠️ Operazione annullata.")
+            break
 
-    ref = feat[campo_input]
-    if not ref:
-        continue
+        ref = feat[CAMPO_INPUT]
+        if not ref:
+            continue
 
-    parsed = parse_ncr(ref)
-    if not parsed:
-        continue
+        parsed = parse_ncr(ref)
+        if not parsed:
+            righe_log.append(f"⚠️ Parsing fallito per ID {feat.id()}: {ref}")
+            continue
 
-    fid = feat.id()
-    update = {}
-    for campo, valore in parsed.items():
-        idx = mappa_indici[campo]
-        update[idx] = valore
-    valori_da_aggiornare[fid] = update
+        fid = feat.id()
+        update = {}
+        for campo, valore in parsed.items():
+            idx = mappa_indici[campo]
+            update[idx] = valore
+        valori_da_aggiornare[fid] = update
 
-    if salva_log:
-        righe_log.append(f"ID {fid}: {ref} → {parsed}")
+        if salva_log:
+            righe_log.append(f"ID {fid}: {ref} → {parsed}")
 
-    if i % 100 == 0 or i == total - 1:
-        progress.setValue(i + 1)
+        if i % 10 == 0 or i == total - 1:  # Aggiorna la barra di progresso ogni 10 iterazioni
+            progress.setValue(i + 1)
 
-progress.close()
+    progress.close()
 
-# === AGGIORNA IL LAYER IN MODO SICURO ===
-if not layer.isEditable():
-    if not layer.startEditing():
+    # === AGGIORNA IL LAYER IN MODO SICURO ===
+    if not layer.isEditable() and not layer.startEditing():
         raise Exception("⚠️ Non riesco ad aprire il layer in modalità di editing.")
 
-prov.changeAttributeValues(valori_da_aggiornare)
+    prov.changeAttributeValues(valori_da_aggiornare)
 
-if not layer.commitChanges():
-    raise Exception("⚠️ Errore nel salvataggio delle modifiche.")
+    if not layer.commitChanges():
+        raise Exception("⚠️ Errore nel salvataggio delle modifiche.")
 
-# === LOG ===
-if salva_log:
-    with open(log_filename, "w", encoding="utf-8") as f:
-        f.write("\n".join(righe_log))
-    QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filename}", "Script Catasto", Qgis.Info)
-    print(f"✅ Completato! Log: {log_filename}")
-else:
-    print("✅ Completato! Nessun log salvato.")
+    # === LOG ===
+    if salva_log:
+        with open(log_filename, "w", encoding="utf-8") as f:
+            f.write("\n".join(righe_log))
+        QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filename}", "Script Catasto", Qgis.Info)
+        print(f"✅ Completato! Log: {log_filename}")
+    else:
+        print("✅ Completato! Nessun log salvato.")
+
+except Exception as e:
+    print(f"Errore: {e}")
+    progress.close()
