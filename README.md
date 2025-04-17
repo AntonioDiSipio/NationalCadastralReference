@@ -4,7 +4,7 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
 
 ## 📦 Contenuto
 
-- `ncr_commented.py`: script principale, già pronto all'uso in QGIS
+- `ncr.py`: script principale, già pronto all'uso in QGIS
 - `codcomITA.py`: mappa completa dei codici catastali => nomi comuni italiani
 
 ## 🧩 Requisiti
@@ -31,9 +31,9 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
 
 ### Fase 2: Esecuzione dello script
 
-1. Scarica `ncr_commented.py` e `codcomITA.py` e mettili nella stessa cartella
+1. Scarica `ncr.py` e `codcomITA.py` e mettili nella stessa cartella
 2. Vai su **Plugin > Console Python > Mostra editor**
-3. Apri `ncr_commented.py` dallo script editor
+3. Apri `ncr.py` dallo script editor
 4. Clicca su **Esegui Script**
 5. Verrà richiesto dove salvare un file `.txt` contenente il log delle operazioni
 6. Il layer verrà aggiornato con i seguenti campi (creati automaticamente se mancanti):
@@ -48,7 +48,7 @@ Questo repository contiene uno script Python per QGIS che estrae automaticamente
 
 | NATIONALCADASTRALREFERENCE       |
 |----------------------------------|
-| C632_1234..567                   |
+| C632_1234.567                   |
 
 ## 📤 Output generato
 
@@ -78,7 +78,7 @@ D763_0015AZ.4159
 **Output:**
 | comune               | sezione   | foglio | allegato | sviluppo | particella |
 |----------------------|-----------|--------|----------|----------|------------|
-| Francavilla al Mare | *(vuoto)* | 0015   | A        | Z        | 4159       |
+| Francavilla al Mare  | *(vuoto)* | 0015   | A        | Z        | 4159       |
 
 ## 📝 Log
 
