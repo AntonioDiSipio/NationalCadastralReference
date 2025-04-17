@@ -12,7 +12,6 @@ CAMPO_INPUT = "NATIONALCADASTRALREFERENCE"
 CAMPI_OUTPUT = ["comune", "sezione", "foglio", "allegato", "sviluppo", "particella"]
 PATTERN_NCR = r"^([A-Z0-9]{4})([_A-Z])([0-9]{4})([A-Z0-9]?)([A-Z0-9]?)\.(.+)$"
 salva_log = True  # Aggiunto per abilitare o disabilitare il salvataggio del log
-log_filename = "log_dati_catastali.txt"  # Nome predefinito del file di log
 
 # === FUNZIONI UTILI ===
 def verifica_layer_attivo():
@@ -42,6 +41,16 @@ def parse_ncr(ref):
         "sviluppo": sviluppo,
         "particella": particella
     }
+
+def scegli_percorso_log():
+    """Finestra di dialogo per scegliere dove salvare i log."""
+    percorso_file, _ = QFileDialog.getSaveFileName(
+        None,
+        "Scegli dove salvare i log",
+        "",
+        "File di testo (*.txt);;Tutti i file (*)"
+    )
+    return percorso_file
 
 # === INIZIALIZZAZIONE ===
 layer = verifica_layer_attivo()
@@ -111,10 +120,14 @@ try:
 
     # === LOG ===
     if salva_log:
-        with open(log_filename, "w", encoding="utf-8") as f:
-            f.write("\n".join(righe_log))
-        QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filename}", "Script Catasto", Qgis.Info)
-        print(f"✅ Completato! Log: {log_filename}")
+        log_filename = scegli_percorso_log()
+        if log_filename:
+            with open(log_filename, "w", encoding="utf-8") as f:
+                f.write("\n".join(righe_log))
+            QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filename}", "Script Catasto", Qgis.Info)
+            print(f"✅ Completato! Log: {log_filename}")
+        else:
+            print("✅ Completato! Nessun log salvato (percorso non selezionato).")
     else:
         print("✅ Completato! Nessun log salvato.")
 
