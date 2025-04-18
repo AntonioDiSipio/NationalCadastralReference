@@ -42,16 +42,6 @@ def parse_ncr(ref):
         "particella": particella
     }
 
-def scegli_percorso_log():
-    """Finestra di dialogo per scegliere dove salvare i log."""
-    percorso_file, _ = QFileDialog.getSaveFileName(
-        None,
-        "Scegli dove salvare i log",
-        "",
-        "File di testo (*.txt);;Tutti i file (*)"
-    )
-    return percorso_file
-
 # === INIZIALIZZAZIONE ===
 layer = verifica_layer_attivo()
 prov = layer.dataProvider()
@@ -135,17 +125,24 @@ try:
 
     # === LOG ===
     if salva_log:
-        log_filename = scegli_percorso_log()
-        if log_filename:
-            with open(log_filename, "w", encoding="utf-8") as f:
+        # Genera un nome di file log automatico
+        log_filename = f"log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        # Finestra per scegliere la directory di salvataggio
+        directory_scelta = QFileDialog.getExistingDirectory(
+            None,
+            "Scegli la directory dove salvare i log"
+        )
+        if directory_scelta:  # Controlla se è stata selezionata una directory
+            log_filepath = os.path.join(directory_scelta, log_filename)
+            with open(log_filepath, "w", encoding="utf-8") as f:
                 f.write("🔄 Campi aggiornati:\n")
                 f.write("\n".join(log_aggiornati))
                 f.write("\n\n✅ Campi invariati:\n")
                 f.write("\n".join(log_invariati))
-            QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filename}", "Script Catasto", Qgis.Info)
-            print(f"✅ Completato! Log: {log_filename}")
+            QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filepath}", "Script Catasto", Qgis.Info)
+            print(f"✅ Completato! Log salvato in: {log_filepath}")
         else:
-            print("✅ Completato! Nessun log salvato (percorso non selezionato).")
+            print("✅ Completato! Nessuna directory selezionata, log non salvato.")
     else:
         print("✅ Completato! Nessun log salvato.")
 
