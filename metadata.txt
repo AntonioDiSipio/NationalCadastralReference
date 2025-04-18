@@ -1,0 +1,10 @@
+[general]
+name=NCR
+qgisMinimumVersion=3.28
+description=Estrazione automatica dei dati catastali da NATIONALCADASTRALREFERENCE
+version=1.0
+author=Plugin Autogenerato
+email=example@example.com
+
+[resources]
+icon=icon.png
