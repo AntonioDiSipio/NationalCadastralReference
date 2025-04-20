@@ -103,9 +103,8 @@ NCR/
 
 ## 👤 Autore
 
-Plugin generato e personalizzato internamente.
-
-📧 Email: `example@example.com`  
+Plugin sviluppato da **Antonio Di Sipio**  
+📧 Email: `antonio[dot]disipio[at]gmail[dot]com`  
 🔗 Licenza: MIT
 
 ---
