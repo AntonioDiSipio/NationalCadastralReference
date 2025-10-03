@@ -72,11 +72,11 @@
 
 ## 💡 Esempi di input
 
-| Codice input           | Comune riconosciuto       | Foglio | Particella |
-|------------------------|---------------------------|--------|------------|
-| `C632_1234.567`        | Chieti                    | 1234   | 567        |
-| `D763_00210Z.4331`     | Francavilla al Mare       | 0210   | 4331       |
-| `A345A010200.2908`     | L'Aquila                  | 0102   | 2908       |
+| Codice input        | Comune riconosciuto   | Sezione | Foglio | Allegato | Sviluppo | Particella |
+|---------------------|-----------------------|---------|--------|----------|----------|------------|
+| `C632_1234.567`     | Chieti                | –       | 1234   | –        | –        | 567        |
+| `D763_00210Z.4331`  | Francavilla al Mare   | –       | 0210   | Z        | –        | 4331       |
+| `A345A010200.2908`  | L'Aquila              | A       | 0102   | –        | –        | 2908       |
 
 ---
 
