@@ -1,6 +1,6 @@
 # 🏷️ Plugin QGIS: NCR – Estrazione dati catastali
 
-**NCR** è un plugin per QGIS che permette di estrarre automaticamente i dati catastali dai riferimenti contenuti nel campo `NATIONALCADASTRALREFERENCE` di un layer vettoriale. I campi risultanti vengono compilati direttamente nel layer attivo.
+**NCR** è un plugin per QGIS che permette di estrarre automaticamente i dati catastali dai riferimenti contenuti nel campo `NATIONALCADASTRALREFERENCE` di un layer vettoriale. I campi risultanti vengono compilati direttamente nel layer attivo oppure in una copia temporanea se necessario.
 
 ---
 
@@ -16,6 +16,9 @@
   - Particella
 - Supporto alla mappa dei codici catastali italiani (`codcomITA.py`)
 - Salvataggio del log delle operazioni svolte
+- **Gestione layer speciali:**
+  - Se il layer è un **WFS** o un **layer temporaneo**, viene creata automaticamente una copia `-copy` in memoria, editabile e con le stesse geometrie/attributi.
+  - Se il layer è un **layer normale** (es. shapefile, GeoPackage, PostGIS), il plugin lavora direttamente sull’originale.
 
 ---
 
@@ -26,17 +29,17 @@
 
 ---
 
-## 🚀 Come si installa
+## 🚀 Installazione
 
-1. Scarica il plugin o clona il repository nella tua cartella dei plugin di QGIS:
+1. Copia la cartella del plugin in:
    ```
    ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/NCR
    ```
 
 2. Verifica che i file siano presenti:
-   - `NCR.py` (script principale)
-   - `ncr_plugin.py` (integrazione nel menu QGIS)
-   - `codcomITA.py` (mappa codici comuni)
+   - `NCR.py` (script principale con logica di estrazione e gestione layer)
+   - `ncr_plugin.py` (integrazione con menu QGIS)
+   - `codcomITA.py` (mappa codici comuni catastali)
    - `icon.png` (icona plugin)
    - `metadata.txt`
    - `__init__.py`
@@ -45,13 +48,16 @@
 
 ---
 
-## 🖥️ Come si usa
+## 🖥️ Utilizzo
 
 1. Carica un layer contenente il campo `NATIONALCADASTRALREFERENCE`.
 2. Avvia il plugin da:
    - **Plugin > NCR > Estrai dati catastali**, oppure
    - **Toolbar** (icona con il logo dell'Agenzia delle Entrate).
 3. Il plugin:
+   - Verifica se il layer è editabile:
+     - Se **WFS** o **temporaneo**, crea un nuovo layer `nome-layer-copy` in memoria (editabile) con stesse geometrie e attributi.
+     - Se **normale**, lavora direttamente sull’originale.
    - Crea i campi di output se non presenti
    - Analizza e compila i valori riga per riga
    - Salva un log (facoltativo) delle operazioni effettuate
@@ -84,6 +90,7 @@
 ## 📝 Log
 
 Alla fine dell'elaborazione ti verrà chiesto se vuoi salvare un file `.txt` con il log dettagliato delle operazioni (modifiche, campi invariati, errori di parsing ecc.).
+Il log è organizzato per **ID feature** ed è utile per verificare cosa è stato modificato.
 
 ---
 
@@ -114,3 +121,10 @@ Plugin sviluppato da **Antonio Di Sipio**
 L'icona del plugin è ispirata al logo dell’Agenzia delle Entrate.
 
 ---
+
+## 📌 Note importanti
+
+- Il plugin aggiunge automaticamente i campi mancanti.
+- Se usato su un layer WFS/temporaneo, viene creata una copia `-copy` **editabile**: lavora sempre su questa, non sull’originale.
+- Se usato su un layer shapefile, gpkg o PostGIS, lavora direttamente sul layer originale.
+- Il comportamento è stato pensato per evitare errori di scrittura su layer non editabili (tipico dei WFS).
