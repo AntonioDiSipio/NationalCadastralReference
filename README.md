@@ -4,6 +4,18 @@
 
 ---
 
+## ⚠️ Modalità di lavoro sui layer (IMPORTANTISSIMO)
+
+➡️ **Se il layer è WFS o temporaneo:**  
+🔄 Viene creata automaticamente una **copia `-copy` in memoria**, editabile, con le stesse geometrie e attributi. Il plugin lavora **solo su questa copia**. L’originale resta invariato.  
+
+➡️ **Se il layer è un layer normale (Shapefile, GeoPackage, PostGIS, ecc.):**  
+✍️ Il plugin lavora **direttamente sul layer originale** senza creare copie.
+
+👉 Questo comportamento è stato introdotto per evitare errori di scrittura su layer non editabili (tipico dei WFS).
+
+---
+
 ## 🧩 Funzionalità principali
 
 - Analisi del campo `NATIONALCADASTRALREFERENCE`
@@ -16,9 +28,6 @@
   - Particella
 - Supporto alla mappa dei codici catastali italiani (`codcomITA.py`)
 - Salvataggio del log delle operazioni svolte
-- **Gestione layer speciali:**
-  - Se il layer è un **WFS** o un **layer temporaneo**, viene creata automaticamente una copia `-copy` in memoria, editabile e con le stesse geometrie/attributi.
-  - Se il layer è un **layer normale** (es. shapefile, GeoPackage, PostGIS), il plugin lavora direttamente sull’originale.
 
 ---
 
@@ -55,9 +64,6 @@
    - **Plugin > NCR > Estrai dati catastali**, oppure
    - **Toolbar** (icona con il logo dell'Agenzia delle Entrate).
 3. Il plugin:
-   - Verifica se il layer è editabile:
-     - Se **WFS** o **temporaneo**, crea un nuovo layer `nome-layer-copy` in memoria (editabile) con stesse geometrie e attributi.
-     - Se **normale**, lavora direttamente sull’originale.
    - Crea i campi di output se non presenti
    - Analizza e compila i valori riga per riga
    - Salva un log (facoltativo) delle operazioni effettuate
@@ -125,6 +131,5 @@ L'icona del plugin è ispirata al logo dell’Agenzia delle Entrate.
 ## 📌 Note importanti
 
 - Il plugin aggiunge automaticamente i campi mancanti.
-- Se usato su un layer WFS/temporaneo, viene creata una copia `-copy` **editabile**: lavora sempre su questa, non sull’originale.
-- Se usato su un layer shapefile, gpkg o PostGIS, lavora direttamente sul layer originale.
-- Il comportamento è stato pensato per evitare errori di scrittura su layer non editabili (tipico dei WFS).
+- **ATTENZIONE:** per layer WFS o temporanei lavora su una copia `-copy` in memoria; per gli altri layer lavora direttamente sull’originale.
+- Il comportamento è stato pensato per evitare errori di scrittura su layer non editabili.
