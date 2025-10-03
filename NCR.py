@@ -2,7 +2,7 @@ def main():
     from qgis.PyQt.QtCore import QVariant
     from qgis.PyQt.QtWidgets import QProgressDialog, QFileDialog
     from qgis.utils import iface
-    from qgis.core import QgsProject, QgsField, Qgis, QgsMessageLog
+    from qgis.core import QgsField, QgsVectorLayer, QgsProject, QgsFeature, Qgis, QgsMessageLog, QgsWkbTypes
     import os
     import re
     from datetime import datetime
@@ -12,18 +12,15 @@ def main():
     CAMPO_INPUT = "NATIONALCADASTRALREFERENCE"
     CAMPI_OUTPUT = ["comune", "sezione", "foglio", "allegato", "sviluppo", "particella"]
     PATTERN_NCR = r"^([A-Z0-9]{4})([_A-Z])([0-9]{4})([A-Z0-9]?)([A-Z0-9]?)\.(.+)$"
-    salva_log = True  # Abilita o disabilita il salvataggio del log
+    salva_log = True
 
-    # === FUNZIONI UTILI ===
     def verifica_layer_attivo():
-        """Verifica che il layer attivo sia presente e valido."""
         layer = iface.activeLayer()
         if not layer:
             raise Exception("Nessun layer attivo trovato!")
         return layer
 
     def parse_ncr(ref):
-        """Parsa il riferimento catastale e restituisce un dizionario."""
         match = re.match(PATTERN_NCR, ref)
         if not match:
             return None
@@ -43,23 +40,48 @@ def main():
             "particella": particella
         }
 
-    # === INIZIALIZZAZIONE ===
     layer = verifica_layer_attivo()
+
+    # Se il provider è WFS o memory → duplica in memoria con geometrie e attributi
+    if layer.dataProvider().name() in ["WFS", "memory"]:
+        geometry_type = QgsWkbTypes.displayString(layer.wkbType())  # es: Polygon, MultiPolygon, ecc.
+        crs = layer.crs().authid()
+        uri = f"memory?geometry={geometry_type}&crs={crs}"
+        layer_copy = QgsVectorLayer(uri, layer.name() + "-copy", "memory")
+        layer_copy_data = layer_copy.dataProvider()
+
+        # Copia campi
+        layer_copy_data.addAttributes(layer.fields())
+        layer_copy.updateFields()
+
+        # Copia geometrie + attributi
+        new_features = []
+        for feat in layer.getFeatures():
+            new_feat = QgsFeature(layer.fields())
+            new_feat.setGeometry(feat.geometry())
+            new_feat.setAttributes(feat.attributes())
+            new_features.append(new_feat)
+
+        layer_copy_data.addFeatures(new_features)
+
+        # Aggiungi la copia al progetto
+        QgsProject.instance().addMapLayer(layer_copy)
+
+        # Usa la copia come layer attivo
+        layer = layer_copy
+
     prov = layer.dataProvider()
     campi_esistenti = [f.name().lower() for f in layer.fields()]
     mappa_indici = {}
 
-    # === CREA CAMPI MANCANTI ===
     nuovi = [QgsField(nome, QVariant.String) for nome in CAMPI_OUTPUT if nome.lower() not in campi_esistenti]
     if nuovi:
         prov.addAttributes(nuovi)
         layer.updateFields()
 
-    # === INDICI CAMPI ===
     for nome in CAMPI_OUTPUT:
         mappa_indici[nome] = layer.fields().lookupField(nome)
 
-    # === FEATURES ===
     features = list(layer.getFeatures())
     total = len(features)
 
@@ -68,14 +90,13 @@ def main():
     progress.setMinimumDuration(0)
 
     valori_da_aggiornare = {}
-    log_aggiornati = []  # Log per i campi aggiornati
-    log_invariati = []  # Log per i campi invariati
-    righe_log = []  # Log generali
+    log_aggiornati = []
+    log_invariati = []
+    righe_log = []
 
     try:
         for i, feat in enumerate(features):
             if progress.wasCanceled():
-                print("⚠️ Operazione annullata.")
                 break
 
             ref = feat[CAMPO_INPUT]
@@ -91,7 +112,9 @@ def main():
             fid = feat.id()
             update = {}
             for campo, valore in parsed.items():
-                idx = mappa_indici[campo]
+                idx = mappa_indici.get(campo, -1)
+                if idx == -1:
+                    continue
                 valore_esistente = feat[idx]
                 if valore_esistente == valore:
                     log_invariati.append(f"ID {fid}, Campo '{campo}': Valore invariato ({valore_esistente}).")
@@ -113,17 +136,19 @@ def main():
 
         progress.close()
 
-        # === AGGIORNA IL LAYER IN MODO SICURO ===
-        if not layer.isEditable() and not layer.startEditing():
-            raise Exception("⚠️ Non riesco ad aprire il layer in modalità di editing.")
+        if not layer.isEditable():
+            layer.startEditing()
 
         if valori_da_aggiornare:
-            prov.changeAttributeValues(valori_da_aggiornare)
+            if layer.dataProvider().name() == "memory":
+                for fid, update in valori_da_aggiornare.items():
+                    for idx, valore in update.items():
+                        layer.changeAttributeValue(fid, idx, valore)
+            else:
+                prov.changeAttributeValues(valori_da_aggiornare)
+                if not layer.commitChanges():
+                    raise Exception("⚠️ Errore nel salvataggio delle modifiche.")
 
-        if not layer.commitChanges():
-            raise Exception("⚠️ Errore nel salvataggio delle modifiche.")
-
-        # === LOG ===
         if salva_log:
             log_filename = f"log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             directory_scelta = QFileDialog.getExistingDirectory(
@@ -133,7 +158,6 @@ def main():
 
             if directory_scelta:
                 log_filepath = os.path.join(directory_scelta, log_filename)
-
                 log_per_id = {}
 
                 for riga in log_aggiornati + log_invariati:
@@ -157,13 +181,12 @@ def main():
                             if "Parsing fallito" in riga:
                                 f.write(f"{riga}\n")
 
-                QgsMessageLog.logMessage(f"Dati catastali aggiornati.\nLog: {log_filepath}", "Script Catasto", Qgis.Info)
-                print(f"✅ Completato! Log salvato in: {log_filepath}")
+                QgsMessageLog.logMessage(f"Dati catastali aggiornati. Log: {log_filepath}", "NCR", Qgis.Info)
             else:
                 print("✅ Completato! Nessuna directory selezionata, log non salvato.")
         else:
             print("✅ Completato! Nessun log salvato.")
 
     except Exception as e:
-        print(f"Errore: {e}")
         progress.close()
+        raise e
