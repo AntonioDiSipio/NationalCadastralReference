@@ -1,0 +1,11 @@
+[general]
+name=NCR
+qgisMinimumVersion=4.0
+description=Estrazione automatica dei dati catastali da NATIONALCADASTRALREFERENCE
+license=GPL-3.0-or-later
+version=2.0
+author=Antonio Di Sipio
+email=antonio.disipio@gmail.com
+
+[resources]
+icon=icon.png
